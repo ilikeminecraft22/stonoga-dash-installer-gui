@@ -1,4 +1,5 @@
 #include <gtkmm-4.0/gtkmm.h>
+#include <gtkmm-4.0/gtkmm/label.h>
 #include <iostream>
 #include <cstdlib>
 #include <string>
@@ -53,47 +54,50 @@ public:
         title_label.set_text("Stonoga Dash Installer");
         title_label.set_markup("<span size='x-large' weight='bold'>Stonoga Dash Installer</span>");
 
-        download_button.set_label("Download and install");
-        backup_button.set_label("Backup Icon");
+        download_button.set_label("Install Stonoga Dash");
+        status_label.set_text("...");
+        status_label.set_markup("<span weight='normal' color='#AAAAAA'>...</span>");
 
         box->append(title_label);
         box->append(download_button);
-        box->append(backup_button);
+        box->append(status_label);
 
         download_button.signal_clicked().connect([this, path, player_png_name]() {
+            status_label.set_markup("<span weight='normal' color='#AAAAFF'>Installing</span>");
             try {
-                fs::copy_file(
-                    fs::path("files/icons") / player_png_name,
-                    path / "icons" / player_png_name,
-                    fs::copy_options::overwrite_existing
-                );
+                for(const auto& entry : fs::directory_iterator("files/icons")) {
+                    if(entry.is_regular_file()) {
+                        fs::copy_file(entry.path(), path / "icons" / entry.path().filename(), fs::copy_options::overwrite_existing);
+                        std::cout << "added -> " << entry.path().filename().string() << '\n';
+                    }
+                }
 
-                for (const auto& entry : fs::directory_iterator("files/Resources")) {
+                for (const auto& entry : fs::directory_iterator("files/Resources/dialogIcons")) {
                     if (entry.is_regular_file()) {
                         fs::copy_file(entry.path(), path / entry.path().filename(), fs::copy_options::overwrite_existing);
                         std::cout << "added -> " << entry.path().filename().string() << '\n';
                     }
                 }
+
+                for (const auto& entry : fs::directory_iterator("files/Resources/mp3")) {
+                    if (entry.is_regular_file()) {
+                        fs::copy_file(entry.path(), path / entry.path().filename(), fs::copy_options::overwrite_existing);
+                        std::cout << "added -> " << entry.path().filename().string() << '\n';
+                    }
+                }
+
+                for (const auto& entry : fs::directory_iterator("files/Resources/ogg")) {
+                    if (entry.is_regular_file()) {
+                        fs::copy_file(entry.path(), path / entry.path().filename(), fs::copy_options::overwrite_existing);
+                        std::cout << "added -> " << entry.path().filename().string() << '\n';
+                    }
+                }
+                status_label.set_markup("<span weight='normal' color='#AAFFAA'>Installed!</span>");
             } catch (const fs::filesystem_error& e) {
                 std::cout << "Filesystem error: " << e.what() << '\n';
             }
             
         });
-
-        backup_button.signal_clicked().connect([this, path, player_png_name]() {
-            try {
-                fs::copy_file(
-                    fs::path("files/backup") / player_png_name,
-                    path / "icons" / player_png_name,
-                    fs::copy_options::overwrite_existing
-                );
-
-                std::cout << "Icon backup restored!\n";
-            } catch (const fs::filesystem_error& e) {
-                std::cout << "Filesystem error: " << e.what() << '\n';
-            }
-        });
-
 
         set_child(*box);
     }
@@ -101,7 +105,7 @@ public:
 private:
     Gtk::Button download_button;
     Gtk::Label title_label;
-    Gtk::Button backup_button;
+    Gtk::Label status_label;
 };
 
 int main(int argc, char* argv[]) {
